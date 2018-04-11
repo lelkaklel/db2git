@@ -1,6 +1,6 @@
 # 2018 (c) Solovev Aleksei <lelkaklel@gmail.com>
 
-$SettingsFile = '.\src\settings.ini'
+$SettingsFile = '.\settings.ini'
 
 Clear-Host  # clear terminal screen
 
@@ -78,7 +78,27 @@ function Get-SettingsValue ([System.Object]$SettingsObject, [string]$Section, [s
 function Db2Git-Setup {
     $ini = @{}
     $ini['General'] = @{}
-    $ini['General']['ScriptRepository']
+    Write-Host "=============== DB2GIT SETUP ================"
+    $DirectoryToSaveTo = Read-Host "Directory for storing scripts:"
+    $ini['General']['DirectoryToSaveTo'] = $DirectoryToSaveTo
+    $ServerName = Read-Host "SQL Server name:"
+    $ini['General']['ServerName'] = ''
+    $Database = Read-Host "Database name:"
+    $ini['General']['Database'] = ''
+    $Login = Read-Host "SQL Server authentication Login:"
+    $ini['General']['Login'] = ''
+    $Password = Read-Host "SQL Server authentication Password:"
+    $ini['General']['Password'] = ''
+    $ExcludeSchemas = Read-Host "SQL Server schemas to be excluded (default 'sys,Information_Schema'):"
+    If ($ExcludeSchemas -eq '') {"sys,Information_Schema"} else {$ExcludeSchemas}
+    $ini['General']['ExcludeSchemas'] = If ($ExcludeSchemas -eq '') {"sys,Information_Schema"} else {$ExcludeSchemas}
+    Out-IniFile $ini ".\settings.ini"
+    Write-Host "============================================="
+}
+
+# create settings file if not exitsts
+If (-not (Test-Path ".\settings.ini")) {
+    Db2Git-Setup
 }
 
 Try { 
@@ -88,8 +108,6 @@ Catch [system.exception] {
     Write-Error "Error while loading settings from file '$SettingsFile' $_"
     return
 }
-
-$ScriptRepository = Get-SettingsValue $Settings 'General' 'ScriptRepository'
 
 git pull
 
