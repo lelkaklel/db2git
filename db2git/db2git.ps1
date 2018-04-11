@@ -1,6 +1,6 @@
 ﻿# 2018 (c) Solovev Aleksei <lelkaklel@gmail.com>
 
-$SettingsFile = '..\settings.ini'
+$SettingsFile = '.\settings.ini'
 
 function Write-Log {
      [CmdletBinding()]
@@ -124,6 +124,16 @@ Remove-Item -force
 Write-Log "INFO" $ServerName $Database "Delete old files end"
 
 ####################### INITIALIZATION ###########################
+
+If (-not (Test-Path $DirectoryToSaveTo)) {
+    Try { 
+        New-Item $DirectoryToSaveTo -type directory | out-null 
+    }
+    Catch [system.exception]{
+        Write-Error "error while creating '$DirectoryToSaveTo' $_"
+        return
+    }
+}
 
 Write-Log "INFO" $ServerName $Database "'Microsoft.SqlServer.SMO' initialization start"
 
