@@ -73,13 +73,12 @@ Catch [system.exception] {
     return
 }
 
-$ScriptRepository = Get-SettingsValue $Settings 'General' 'ScriptRepository'
 $DirectoryToSaveTo = Get-SettingsValue $Settings 'General' 'DirectoryToSaveTo'
-$ServerName = Get-SettingsValue $Settings 'DB' 'ServerName'
-$Database = Get-SettingsValue $Settings 'DB' 'Database'
-$Login = Get-SettingsValue $Settings 'DB' 'Login'
-$Password = Get-SettingsValue $Settings 'DB' 'Password'
-$ExcludeSchemas = Get-SettingsValue $Settings 'DB' 'ExcludeSchemas'
+$ServerName = Get-SettingsValue $Settings 'General' 'ServerName'
+$Database = Get-SettingsValue $Settings 'General' 'Database'
+$Login = Get-SettingsValue $Settings 'General' 'Login'
+$Password = Get-SettingsValue $Settings 'General' 'Password'
+$ExcludeSchemas = Get-SettingsValue $Settings 'General' 'ExcludeSchemas'
 
 Write-Log "INFO" $ServerName $Database "Main script start"
 

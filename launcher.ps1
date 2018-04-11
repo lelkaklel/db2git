@@ -36,6 +36,32 @@ function Get-IniContent ($filePath)
     return $ini
 }
 
+function Out-IniFile($InputObject, $FilePath)
+{
+    $outFile = New-Item -ItemType file -Path $Filepath
+    foreach ($i in $InputObject.keys)
+    {
+        if (!($($InputObject[$i].GetType().Name) -eq "Hashtable"))
+        {
+            #No Sections
+            Add-Content -Path $outFile -Value "$i=$($InputObject[$i])"
+        } else {
+            #Sections
+            Add-Content -Path $outFile -Value "[$i]"
+            Foreach ($j in ($InputObject[$i].keys | Sort-Object))
+            {
+                if ($j -match "^Comment[\d]+") {
+                    Add-Content -Path $outFile -Value "$($InputObject[$i][$j])"
+                } else {
+                    Add-Content -Path $outFile -Value "$j=$($InputObject[$i][$j])" 
+                }
+
+            }
+            Add-Content -Path $outFile -Value ""
+        }
+    }
+}
+
 function Get-SettingsValue ([System.Object]$SettingsObject, [string]$Section, [string]$Key)
 {
     $Val = ''
@@ -49,6 +75,12 @@ function Get-SettingsValue ([System.Object]$SettingsObject, [string]$Section, [s
     return $Val
 }
 
+function Db2Git-Setup {
+    $ini = @{}
+    $ini['General'] = @{}
+    $ini['General']['ScriptRepository']
+}
+
 Try { 
     $Settings = Get-IniContent $SettingsFile 
 }
@@ -59,6 +91,6 @@ Catch [system.exception] {
 
 $ScriptRepository = Get-SettingsValue $Settings 'General' 'ScriptRepository'
 
-git clone $ScriptRepository ".\src"
+git pull
 
-powershell -ExecutionPolicy Unrestricted -File ".\src\db_to_git.ps1"
+powershell -ExecutionPolicy Unrestricted -File ".\db2git\db2git.ps1"
