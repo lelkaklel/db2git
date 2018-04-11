@@ -79,17 +79,17 @@ function Db2Git-Setup {
     $ini = @{}
     $ini['General'] = @{}
     Write-Host "=============== DB2GIT SETUP ================"
-    $DirectoryToSaveTo = Read-Host "Directory for storing scripts:"
+    $DirectoryToSaveTo = Read-Host "Path to local db repository"
     $ini['General']['DirectoryToSaveTo'] = $DirectoryToSaveTo
-    $ServerName = Read-Host "SQL Server name:"
-    $ini['General']['ServerName'] = ''
-    $Database = Read-Host "Database name:"
-    $ini['General']['Database'] = ''
-    $Login = Read-Host "SQL Server authentication Login:"
-    $ini['General']['Login'] = ''
-    $Password = Read-Host "SQL Server authentication Password:"
-    $ini['General']['Password'] = ''
-    $ExcludeSchemas = Read-Host "SQL Server schemas to be excluded (default 'sys,Information_Schema'):"
+    $ServerName = Read-Host "SQL Server name"
+    $ini['General']['ServerName'] = $ServerName
+    $Database = Read-Host "Database name"
+    $ini['General']['Database'] = $Database
+    $Login = Read-Host "SQL Server authentication Login"
+    $ini['General']['Login'] = $Login
+    $Password = Read-Host "SQL Server authentication Password"
+    $ini['General']['Password'] = $Password
+    $ExcludeSchemas = Read-Host "SQL Server schemas to be excluded (default 'sys,Information_Schema')"
     If ($ExcludeSchemas -eq '') {"sys,Information_Schema"} else {$ExcludeSchemas}
     $ini['General']['ExcludeSchemas'] = If ($ExcludeSchemas -eq '') {"sys,Information_Schema"} else {$ExcludeSchemas}
     Out-IniFile $ini ".\settings.ini"
