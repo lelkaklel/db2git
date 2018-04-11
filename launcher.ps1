@@ -1,10 +1,13 @@
+# 2018 (c) Solovev Aleksei <lelkaklel@gmail.com>
+
+$SettingsFile = '.\src\settings.ini'
+
 Clear-Host  # clear terminal screen
 
-$scriptpath = $MyInvocation.MyCommand.Path
-$dir = Split-Path $scriptpath
-Set-Location -Path $dir
-
-$SettingsFile = '.\settings.ini'
+# change work dir to launcher dir
+$ScriptPath = $MyInvocation.MyCommand.Path
+$Dir = Split-Path $ScriptPath
+Set-Location -Path $Dir
 
 function Get-IniContent ($filePath)
 {
@@ -46,8 +49,6 @@ function Get-SettingsValue ([System.Object]$SettingsObject, [string]$Section, [s
     return $Val
 }
 
-
-
 Try { 
     $Settings = Get-IniContent $SettingsFile 
 }
@@ -56,21 +57,8 @@ Catch [system.exception] {
     return
 }
 
-
 $ScriptRepository = Get-SettingsValue $Settings 'General' 'ScriptRepository'
-$DirectoryToSaveTo = Get-SettingsValue $Settings 'General' 'DirectoryToSaveTo'
-$ServerName = Get-SettingsValue $Settings 'DB' 'ServerName'
-$Database = Get-SettingsValue $Settings 'DB' 'Database'
-$Login = Get-SettingsValue $Settings 'DB' 'Login'
-$Password = Get-SettingsValue $Settings 'DB' 'Password'
-$ExcludeSchemas = Get-SettingsValue $Settings 'DB' 'ExcludeSchemas'
 
-Write-Verbose "ScriptRepository = $ScriptRepository"
-Write-Verbose "DirectoryToSaveTo = $DirectoryToSaveTo"
-Write-Verbose "ServerName = $ServerName"
-Write-Verbose "Database = $Database"
-Write-Verbose "Login = $Login"
-Write-Verbose "Password = $Password"
-Write-Verbose "ExcludeSchemas = $ExcludeSchemas"
+git clone $ScriptRepository ".\src"
 
-powershell -ExecutionPolicy Unrestricted -File ".\db_to_git.ps1" $ServerName $Database $Login $Password $DirectoryToSaveTo $ExcludeSchemas
+powershell -ExecutionPolicy Unrestricted -File ".\src\db_to_git.ps1"

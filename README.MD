@@ -21,4 +21,3 @@
     ```
     powershell -ExecutionPolicy Unrestricted -File "<Полный путь к файлу launcher.ps1>"
     ```
-

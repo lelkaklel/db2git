@@ -1,37 +1,87 @@
-﻿<#
-.SYNOPSIS
-Generate file-per-object scripts of specified server and database.
-.DESCRIPTION
-Generate file-per-object scripts of specified server and database to specified directory. Attempts to create specified directory if not found.
-.PARAMETER ServerName
-Specifies the database server hostname.
-.PARAMETER Database
-Specifies the name of the database you want to script as objects to files.
-.PARAMETER Login
-Specifies the SQL Server authentication Login.
-.PARAMETER Password
-Specifies the SQL Server authentication Password.
-.PARAMETER DirectoryToSaveTo
-Specifies the directory where you want to store the generated scripts.
-.PARAMETER ExcludeSchemas
-Specifies the database schemas that you do not want to script.
-#>
+﻿# 2018 (c) Solovev Aleksei <lelkaklel@gmail.com>
 
-[CmdletBinding()]
-Param(
-    [Parameter(Mandatory = $true, Position = 1)]
-        [string]$ServerName,
-    [Parameter(Mandatory = $true, Position = 2)]
-        [string]$Database,
-    [Parameter(Mandatory = $true, Position = 3)]
-        [string]$Login,
-    [Parameter(Mandatory = $true, Position = 4)]
-        [string]$Password,
-    [Parameter(Mandatory = $true, Position = 5)]
-        [string]$DirectoryToSaveTo,
-    [Parameter(Mandatory = $false, Position = 6)]
-        [string]$ExcludeSchemas
-)
+$SettingsFile = '..\settings.ini'
+
+function Write-Log {
+     [CmdletBinding()]
+     param(
+         [Parameter()]
+         [ValidateNotNullOrEmpty()]
+         [ValidateSet('NOTSET','DEBUG','INFO','WARN','ERROR','CRIT')]
+         [string]$Severity = 'NOTSET',
+
+         [Parameter()]
+         [ValidateNotNullOrEmpty()]
+         [string]$ServerName,
+
+         [Parameter()]
+         [ValidateNotNullOrEmpty()]
+         [string]$Database,
+         
+         [Parameter()]
+         [ValidateNotNullOrEmpty()]
+         [string]$Message
+     )
+     Write-Output ("{0}`t{1}`t{2}`t{3}`t{4}" -f $(Get-Date -f yyyy-MM-ddTHH:mm:ss.ffff),$Severity,$ServerName,$Database,$Message)
+ }
+
+function Get-IniContent ($filePath)
+{
+    $ini = @{}
+    switch -regex -file $FilePath
+    {
+        "^\[(.+)\]" # Section
+        {
+            $section = $matches[1]
+            $ini[$section] = @{}
+            $CommentCount = 0
+        }
+        "^(;.*)$" # Comment
+        {
+            $value = $matches[1]
+            $CommentCount = $CommentCount + 1
+            $name = "Comment" + $CommentCount
+            $ini[$section][$name] = $value
+        } 
+        "(.+?)\s*=(.*)" # Key
+        {
+            $name,$value = $matches[1..2]
+            $ini[$section][$name] = $value
+        }
+    }
+    return $ini
+}
+
+function Get-SettingsValue ([System.Object]$SettingsObject, [string]$Section, [string]$Key)
+{
+    $Val = ''
+    Try { 
+        $Val = $SettingsObject[$Section][$Key]
+    }
+    Catch [system.exception] {
+        Write-Error "Error while loading ['$Section']/'$Key' value from file '$SettingsFile' $_"
+        return
+    }
+    return $Val
+}
+
+Try { 
+    $Settings = Get-IniContent $SettingsFile 
+}
+Catch [system.exception] {
+    Write-Error "Error while loading settings from file '$SettingsFile' $_"
+    return
+}
+
+$ScriptRepository = Get-SettingsValue $Settings 'General' 'ScriptRepository'
+$DirectoryToSaveTo = Get-SettingsValue $Settings 'General' 'DirectoryToSaveTo'
+$ServerName = Get-SettingsValue $Settings 'DB' 'ServerName'
+$Database = Get-SettingsValue $Settings 'DB' 'Database'
+$Login = Get-SettingsValue $Settings 'DB' 'Login'
+$Password = Get-SettingsValue $Settings 'DB' 'Password'
+$ExcludeSchemas = Get-SettingsValue $Settings 'DB' 'ExcludeSchemas'
+
+Write-Log "INFO" $ServerName $Database "Main script start"
 
 $ExcludeSchemasList = @()
 
@@ -63,16 +113,20 @@ Try {
 Catch [system.exception]{
 }
 
-Clear-Host  # clear terminal screen
+#Clear-Host  # clear terminal screen
 
 ####################### DELETE OLD FILES #########################
 
+Write-Log "INFO" $ServerName $Database "Delete old files start"
 Get-ChildItem -Path $DirectoryToSaveTo -Recurse -exclude .git/ |
 Select -ExpandProperty FullName |
 sort length -Descending |
 Remove-Item -force 
+Write-Log "INFO" $ServerName $Database "Delete old files end"
 
-####################### SCRIPT OBJECTS ###########################
+####################### INITIALIZATION ###########################
+
+Write-Log "INFO" $ServerName $Database "'Microsoft.SqlServer.SMO' initialization start"
 
 # Load SMO assembly, and if we're running SQL 2008 DLLs load the SMOExtended and SQLWMIManagement libraries
 $v = [System.Reflection.Assembly]::LoadWithPartialName( 'Microsoft.SqlServer.SMO')
@@ -129,7 +183,12 @@ if ($ExcludeSchemasList.Count -gt 0) {
 $objects_count = $d.Rows.Count
 $i = 0
 
+Write-Log "INFO" $ServerName $Database "'Microsoft.SqlServer.SMO' initialization end"
+Write-Log "INFO" $ServerName $Database "Script objects start"
+
 Write-Progress -Activity "Extracting scripts" -status "Scripting 0 / $objects_count" -percentComplete 0
+
+####################### SCRIPT OBJECTS ###########################
 
 # and write out each scriptable object as a file in the directory you specify
 $d | ForEach-Object { # for every object we have in the datatable.
@@ -148,10 +207,14 @@ $d | ForEach-Object { # for every object we have in the datatable.
              return
         }
     }
+    
+    $File = "$($SavePath)\$($_.name -replace '[\\\/\:\.]','-').sql"
+    
     # tell the scripter object where to write it
-    $scripter.Options.Filename = "$($SavePath)\$($_.name -replace '[\\\/\:\.]','-').sql";
+    $scripter.Options.Filename = $File;
 
-    Write-Progress -Activity "Extracting scripts" -status "Scripting $i / $objects_count ($($_.Schema)) $SavePath\$($_.name -replace '[\\\/\:\.]','-').sql" -percentComplete ($i / $objects_count * 100)
+    Write-Progress -Activity "Extracting scripts" -status "Scripting $i / $objects_count ($($_.Schema)) $File" -percentComplete ($i / $objects_count * 100)
+    Write-Log "DEBUG" $ServerName $Database "$File"
 
     # Create a single element URN array
     $UrnCollection = new-object ("$My.urnCollection")
@@ -162,7 +225,13 @@ $d | ForEach-Object { # for every object we have in the datatable.
 
 "All is written out, stupid human! ╭∩╮(Ο_Ο)╭∩╮"
 
-Write-Progress -Activity "Pushing to GIT repository"
+Write-Progress -Activity "Push to GIT repository"
+
+Write-Log "INFO" $ServerName $Database "Script objects end"
+
+Write-Log "INFO" $ServerName $Database "Push to GIT repository start"
+
+####################### PUSH TO GIT ###########################
 
 Set-Location -Path $DirectoryToSaveTo
 
@@ -170,7 +239,6 @@ git add --all
 git commit -m "autocommit $(Get-Date -Format FileDateTime)"
 git push origin master
 
-#Clear-Host  # clear terminal screen
+Write-Log "INFO" $ServerName $Database "Push to GIT repository end"
 
-git diff --text HEAD HEAD^
-
+Write-Log "INFO" $ServerName $Database "Main script end"
