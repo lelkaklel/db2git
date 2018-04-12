@@ -171,7 +171,7 @@ $scripter.Options.Encoding = $Utf8NoBomEncoding
 
 $objectsToDo = [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::All -bxor (
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::Certificate +
-        [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::DatabaseRole +
+        #[long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::DatabaseRole +
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::ExtendedStoredProcedure +
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::MessageType +
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::ServiceBroker +
