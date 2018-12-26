@@ -178,7 +178,9 @@ $objectsToDo = [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::A
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::ServiceContract +
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::ServiceQueue +
         [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::ServiceRoute +
-        [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::SqlAssembly) 
+        [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::SqlAssembly +
+        [long][Microsoft.SqlServer.Management.Smo.DatabaseObjectTypes]::DatabaseScopedConfiguration
+) 
 # and we store them in a datatable
 $d = new-object System.Data.Datatable
 # get just the tables
