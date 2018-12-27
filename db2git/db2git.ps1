@@ -234,8 +234,6 @@ $d | ForEach-Object { # for every object we have in the datatable.
     $scripter.script($URNCollection)
 }
 
-"All is written out, stupid human! ╭∩╮(Ο_Ο)╭∩╮"
-
 Write-Progress -Activity "Push to GIT repository"
 
 Write-Log "INFO" $ServerName $Database "Script objects end"
@@ -253,3 +251,5 @@ git push origin master
 Write-Log "INFO" $ServerName $Database "Push to GIT repository end"
 
 Write-Log "INFO" $ServerName $Database "Main script end"
+
+"All is written out, stupid human! ╭∩╮(Ο_Ο)╭∩╮"
