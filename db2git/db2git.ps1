@@ -219,7 +219,7 @@ $d | ForEach-Object { # for every object we have in the datatable.
         }
     }
     
-    $File = "$($SavePath)\$($_.name -replace '[\\\/\:\.]','-').sql"
+    $File = "$($SavePath)\$($_.name -replace '[\\\/\:\.|]','-').sql"
     
     # tell the scripter object where to write it
     $scripter.Options.Filename = $File;
